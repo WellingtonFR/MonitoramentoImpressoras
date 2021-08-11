@@ -18,11 +18,13 @@ app.get("/", (req, res) => {
     const KitDeManutencao = $("#SupplyPLR1").text();
 
     tabela.push({ Toner: Toner, KitDeManutencao: KitDeManutencao });
+
     res.send(
-      "Impressora IMP_094_FAT_REL_01 com kit de manutencao em " +
-        KitDeManutencao +
-        " e toner em " +
-        Toner
+      "Hello world"
+      //   "Impressora IMP_094_FAT_REL_01 com kit de manutencao em " +
+      //     KitDeManutencao +
+      //     " e toner em " +
+      //     Toner
     );
   });
 });
