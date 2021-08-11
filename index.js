@@ -14,6 +14,6 @@ axios(url)
 
     tabela.push({ Toner: Toner, KitDeManutencao: KitDeManutencao });
 
-    console.log(tabela);
+    document.write(tabela);
   })
   .catch(console.error);
