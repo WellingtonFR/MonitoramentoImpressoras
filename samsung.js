@@ -38,11 +38,11 @@ fs.createReadStream("Impressoras.csv")
 
 function recuperaInformacoes() {
   tabela = [];
-  dados.forEach((dado) => {
-    let urlHP = "http://" + dado.IP;
-    axios(urlHP)
+  dados.forEach(async (dado) => {
+    let url = "http://" + dado.IP;
+    await axios(url)
       .then((response) => {
-        let html = response.data;
+        const html = response.data;
         const $ = cheerio.load(html);
         let TonerBruto = $("#SupplyPLR0").text();
         let Toner = TonerBruto.substring(0, TonerBruto.length - 2);
@@ -70,17 +70,6 @@ function recuperaInformacoes() {
             KitDeManutencao: KitDeManutencao,
           });
         }
-      })
-      .catch((err) => {});
-
-    let urlSamsung =
-      "http://" + dado.IP + "/sws/app/information/home/home.json";
-
-    axios(urlSamsung)
-      .then((response) => {
-        let jsonData = response.data;
-        let jsonSub = jsonData.substring(1, jsonData.length - 1);
-        console.log(jsonSub);
       })
       .catch((err) => {});
   });
