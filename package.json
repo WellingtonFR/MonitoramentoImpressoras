@@ -4,15 +4,21 @@
     "cheerio": "^1.0.0-rc.10",
     "csv-parser": "^3.0.0",
     "express": "^4.17.1",
-    "express-handlebars": "^5.3.3",
-    "puppeteer": "^10.2.0"
+    "express-handlebars": "^5.3.3"
   },
-  "name": "raspagempython",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "monitoramentoimpressoras",
+  "version": "2.0.0",
+  "main": "app.js",
+  "bin": "app.js",
   "devDependencies": {},
   "scripts": {
-    "start": "node ./index.js"
+    "start": "node ./app.js"
+  },
+  "pkg": {
+    "scripts": "build/**/*.js",
+    "assets": ["views/**/*", "public/**/*"],
+    "targets": [ "node12-windows" ],
+    "outputPath": "dist"
   },
   "repository": {
     "type": "git",

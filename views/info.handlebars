@@ -1,43 +1,57 @@
 <div class="container">
 
-  <FORM>
-    <input
-      type="button"
-      id="btn-atualizar"
-      onClick="location.reload()"
-      VALUE="Atualizar"
-    />
-  </FORM>
+  <div class="sidebar">
+    <FORM>
+      <input
+        type="button"
+        id="btn-atualizar"
+        onClick="location.reload()"
+        VALUE="Atualizar"
+      />
+    </FORM>
+  </div>
 
-  <table id="tabela-impressoras">
-    <tr>
-      <th>Fila</th>
-      <th>IP</th>
-      <th>Modelo</th>
-      <th>Toner (%)</th>
-      <th>Kit de manuteção (%)</th>
-    </tr>
-    {{#each tabela}}
+  <div class="content">
+    <table id="tabela-impressoras">
       <tr>
-
-        <td>{{this.Fila}}</td>
-        <td>{{this.IP}}</td>
-        <td>{{this.Modelo}}</td>
-
-        {{#if this.Toner 10}}
-          <td class="error-color">{{this.Toner}}</td>
-        {{else}}
-          <td>{{this.Toner}}</td>
-        {{/if}}
-
-        {{#if this.KitDeManutencao 10}}
-          <td class="error-color">{{this.KitDeManutencao}}</td>
-        {{else}}
-          <td>{{this.KitDeManutencao}}</td>
-        {{/if}}
-
+        <th>Fila</th>
+        <th>IP</th>
+        <th>Modelo</th>
+        <th>Toner (%)</th>
+        <th>Kit de manuteção (%)</th>
+        <th>Unidade de imagem (%)</th>
+        <th>Detalhes</th>
       </tr>
-    {{/each}}
-  </table>
+      {{#each tabela}}
+        <tr>
+
+          <td>{{this.Fila}}</td>
+          <td>{{this.IP}}</td>
+          <td>{{this.Modelo}}</td>
+
+          {{#if this.Toner 10}}
+            <td class="error-color">{{this.Toner}}</td>
+          {{else}}
+            <td>{{this.Toner}}</td>
+          {{/if}}
+
+          {{#if this.KitDeManutencao 10}}
+            <td class="error-color">{{this.KitDeManutencao}}</td>
+          {{else}}
+            <td>{{this.KitDeManutencao}}</td>
+          {{/if}}
+
+          {{#if this.UnidadeDeImagem 10}}
+            <td class="error-color">{{this.UnidadeDeImagem}}</td>
+          {{else}}
+            <td>{{this.UnidadeDeImagem}}</td>
+          {{/if}}
+          <td class="text-center">
+            <a href="/detalhes/{{this.IP}}" class="btn-details">+</a>
+          </td>
+        </tr>
+      {{/each}}
+    </table>
+  </div>
 
 </div>
