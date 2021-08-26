@@ -16,6 +16,7 @@
       <tr>
         <th>Fila</th>
         <th>IP</th>
+        <th>Marca</th>
         <th>Modelo</th>
         <th>Toner (%)</th>
         <th>Kit de manuteção (%)</th>
@@ -26,7 +27,8 @@
         <tr>
 
           <td>{{this.Fila}}</td>
-          <td>{{this.IP}}</td>
+          <td><a href="http://{{this.IP}}" target="blank">{{this.IP}}</a></td>
+          <td>{{this.Marca}}</td>
           <td>{{this.Modelo}}</td>
 
           {{#if this.Toner 10}}
@@ -46,9 +48,27 @@
           {{else}}
             <td>{{this.UnidadeDeImagem}}</td>
           {{/if}}
-          <td class="text-center">
-            <a href="/detalhes/{{this.IP}}" class="btn-details">+</a>
+          <td>
+            <form method="GET" action="/detalhes">
+              <input type="hidden" name="ip" value="{{this.IP}}" />
+              <input type="hidden" name="fila" value="{{this.Fila}}" />
+              <input type="hidden" name="modelo" value="{{this.Modelo}}" />
+              <input type="hidden" name="toner" value="{{this.Toner}}" />
+              <input type="hidden" name="marca" value="{{this.Marca}}" />
+              <input
+                type="hidden"
+                name="kitDeManutencao"
+                value="{{this.KitDeManutencao}}"
+              />
+              <input
+                type="hidden"
+                name="unidadeDeImagem"
+                value="{{this.UnidadeDeImagem}}"
+              />
+              <input type="submit" class="btn-details" value="+" />
+            </form>
           </td>
+
         </tr>
       {{/each}}
     </table>

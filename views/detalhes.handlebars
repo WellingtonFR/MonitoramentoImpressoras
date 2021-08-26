@@ -1,0 +1,75 @@
+<div class="container">
+
+  <div class="sidebar">
+    <form>
+      <input
+        type="button"
+        id="btn-atualizar"
+        onClick="window. history. back()"
+        value="Voltar"
+      />
+    </form>
+  </div>
+
+  <div class="content">
+    <table id="tabela-detalhes">
+      {{#each tabelaDetalhes}}
+
+        <tr>
+          <th>Fila</th>
+          <td>{{this.Fila}}</td>
+        </tr>
+
+        <tr>
+          <th>IP</th>
+          <td>{{this.IP}}</td>
+        </tr>
+
+        <tr>
+          <th>Modelo</th>
+          <td>{{this.Modelo}}</td>
+        </tr>
+
+        <tr>
+          <th>Serial</th>
+          <td>{{this.Serial}}</td>
+        </tr>
+
+        <tr>
+          <th>Toner (%)</th>
+          {{#if this.Toner 10}}
+            <td class="error-color">{{this.Toner}}</td>
+          {{else}}
+            <td>{{this.Toner}}</td>
+          {{/if}}
+        </tr>
+
+        <tr>
+          <th>Kit de manuteção (%)</th>
+          {{#if this.KitDeManutencao 10}}
+            <td class="error-color">{{this.KitDeManutencao}}</td>
+          {{else}}
+            <td>{{this.KitDeManutencao}}</td>
+          {{/if}}
+        </tr>
+
+        <tr>
+          <th>Unidade de imagem (%)</th>
+          {{#if this.UnidadeDeImagem 10}}
+            <td class="error-color">{{this.UnidadeDeImagem}}</td>
+          {{else}}
+            <td>{{this.UnidadeDeImagem}}</td>
+          {{/if}}
+        </tr>
+
+        <tr>
+          <th>Total de impressões</th>
+          <td>{{this.TotalDeImpressoes}}</td>
+        </tr>
+
+      {{/each}}
+
+    </table>
+  </div>
+
+</div>

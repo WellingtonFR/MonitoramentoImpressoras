@@ -5,6 +5,7 @@ const path = require("path");
 const csv = require("csv-parser");
 const hbs = require("express-handlebars");
 const fs = require("fs");
+const { totalmem } = require("os");
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
 //express
@@ -30,6 +31,7 @@ app.set("view engine", "handlebars");
 
 let dados = [];
 let tabela = [];
+let tabelaDetalhes = [];
 
 fs.createReadStream("Impressoras.csv")
   .pipe(csv())
@@ -39,13 +41,12 @@ function recuperaInformacoes() {
   tabela = []; //Limpa dados anteriores
 
   dados.forEach((dado) => {
-    //HP
-
+    //#region HP
     let urlHP = "http://" + dado.IP;
     axios(urlHP)
       .then((response) => {
         let html = response.data;
-        const $ = cheerio.load(html);
+        let $ = cheerio.load(html);
         let TonerBruto = $("#SupplyPLR0").text();
         let Toner = TonerBruto.substring(0, TonerBruto.length - 2);
         let KitDeManutencaoBruto = $("#SupplyPLR1").text();
@@ -71,16 +72,15 @@ function recuperaInformacoes() {
             Toner: Toner,
             KitDeManutencao: KitDeManutencao,
             UnidadeDeImagem: "Não possui",
+            Marca: "HP",
           });
         }
       })
       .catch((err) => {});
 
-    //SAMSUNG
+    //#endregion
 
-    let urlSamsung =
-      "http://" + dado.IP + "/sws/app/information/home/home.json";
-
+    //#region Samsung
     function filtrar(indice1, indice2, dados) {
       let filtro = dados.substring(
         dados.search(indice1),
@@ -102,14 +102,18 @@ function recuperaInformacoes() {
       return valor;
     }
 
+    let urlSamsung =
+      "http://" + dado.IP + "/sws/app/information/home/home.json";
     axios(urlSamsung)
       .then((response) => {
         let UnidadeDeImagem = filtrar("drum_black", "drum_cyan", response.data);
         let Toner = filtrar("toner_black", "toner_cyan", response.data);
         let Modelo = filtrarModelo("model_name", "host_name", response.data);
 
-        if (Toner == "1,") {
-          Toner = "1";
+        for (i = 1; i <= 9; i++) {
+          if (Toner == i + ",") {
+            Toner = i;
+          }
         }
 
         if (UnidadeDeImagem == "0,") {
@@ -124,11 +128,118 @@ function recuperaInformacoes() {
             Toner: Toner,
             KitDeManutencao: "Não possui",
             UnidadeDeImagem: UnidadeDeImagem,
+            Marca: "Samsung",
           });
         }
       })
       .catch((err) => {});
+
+    //#endregion
   });
+}
+
+async function recuperaDetalhes(
+  ip,
+  fila,
+  modelo,
+  toner,
+  kitDeManutencao,
+  marca
+) {
+  tabelaDetalhes = []; //Limpa dados anteriores
+
+  if (marca == "HP") {
+    //HP
+    let urlHP = "http://" + ip + "/hp/device/InternalPages/Index?id=UsagePage";
+    await axios(urlHP)
+      .then((response) => {
+        let html = response.data;
+        let $ = cheerio.load(html);
+        let Serial = $(
+          "#UsagePage\\.DeviceInformation\\.DeviceSerialNumber"
+        ).text();
+        let TotalDeImpressoes = $(
+          "#UsagePage\\.EquivalentImpressionsTable\\.Total\\.Total"
+        ).text();
+
+        if (modelo == "HP LaserJet E50145") {
+          TotalDeImpressoes = $(
+            "#UsagePage\\.EquivalentImpressionsTable\\.Print\\.Total"
+          ).text();
+        }
+
+        TotalDeImpressoes = TotalDeImpressoes.substring(
+          0,
+          TotalDeImpressoes.length - 2
+        );
+        TotalDeImpressoes = TotalDeImpressoes.replace(",", ".");
+
+        if (kitDeManutencao == "") {
+          kitDeManutencao = "Não possui";
+        }
+
+        if (Serial || TotalDeImpressoes) {
+          tabelaDetalhes.push({
+            Fila: fila,
+            IP: ip,
+            Modelo: modelo,
+            Serial: Serial,
+            Toner: toner,
+            KitDeManutencao: kitDeManutencao,
+            UnidadeDeImagem: "Não possui",
+            TotalDeImpressoes: TotalDeImpressoes,
+          });
+        }
+      })
+      .catch((err) => {});
+  }
+
+  //SAMSUNG
+  if (marca == "Samsung") {
+    function filtrarSerial(indice1, dados) {
+      let indice = dados.search(indice1);
+      let valor = dados.substring(indice + 21, indice + 36).trim();
+      return valor;
+    }
+
+    function filtrarTotalDeImpressoes(indice1, indice2, dados) {
+      let filtro = dados
+        .substring(dados.search(indice1), dados.search(indice2))
+        .trim();
+      let indice = filtro.search(":");
+      let valor = filtro.substring(indice + 2, filtro.length - 1).trim();
+      return valor;
+    }
+
+    let urlSamsung =
+      "http://" + ip + "/sws/app/information/counters/counters.json";
+
+    await axios(urlSamsung).then((response) => {
+      let Serial = filtrarSerial("GXI_SYS_SERIAL_NUM", response.data);
+      let TotalDeImpressoes = filtrarTotalDeImpressoes(
+        "GXI_BILLING_TOTAL_IMP_CNT",
+        "GXI_LARGE_BILLING_CNT_SUPPORT",
+        response.data
+      );
+
+      Serial = Serial.replace(",", "");
+      Serial = Serial.replace('"', "");
+
+      if (Serial || TotalDeImpressoes) {
+        tabelaDetalhes.push({
+          Fila: fila,
+          IP: ip,
+          Modelo: modelo,
+          Serial: Serial,
+          Toner: toner,
+          KitDeManutencao: kitDeManutencao,
+          UnidadeDeImagem: "Não possui",
+          TotalDeImpressoes: TotalDeImpressoes,
+        });
+      }
+    });
+    //.catch((err) => {});
+  }
 }
 
 app.get("/", (req, res) => {
@@ -138,6 +249,19 @@ app.get("/", (req, res) => {
 
 app.get("/info", (req, res) => {
   res.render("info", { tabela: tabela });
+});
+
+app.get("/detalhes", async (req, res) => {
+  await recuperaDetalhes(
+    req.query.ip,
+    req.query.fila,
+    req.query.modelo,
+    req.query.toner,
+    req.query.kitDeManutencao,
+    req.query.marca
+  );
+
+  res.render("detalhes", { tabelaDetalhes: tabelaDetalhes });
 });
 
 app.listen(port, () => {});

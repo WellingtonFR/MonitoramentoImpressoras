@@ -31,7 +31,17 @@ body {
 .content {
   display: grid;
   align-items: center;
+  justify-items: center;
   margin: 10px;
+}
+
+a {
+  text-decoration: none;
+  color: rgb(0, 0, 0);
+}
+
+a:hover {
+  color: rgb(0, 62, 179);
 }
 
 .error-color {
@@ -63,6 +73,40 @@ body {
 }
 
 #tabela-impressoras tr:hover {
+  transition: 0.4s;
+  background-color: rgb(219, 233, 255);
+  border-bottom: 2px solid #fff;
+}
+
+/* detalhes */
+
+#tabela-detalhes {
+  width: 60%;
+  text-align: left;
+  background-color: rgb(0, 72, 180);
+  border-collapse: collapse;
+}
+
+#tabela-detalhes td {
+  padding: 3px;
+  padding-left: 10px;
+  border: none;
+}
+
+#tabela-detalhes th {
+  padding: 3px;
+  padding-left: 10px;
+  width: 30%;
+  background-color: rgb(112, 169, 255);
+  border: none;
+}
+
+#tabela-detalhes tr {
+  background-color: rgb(174, 206, 255);
+  border-bottom: 2px solid #fff;
+}
+
+#tabela-detalhes tr:hover {
   transition: 0.4s;
   background-color: rgb(219, 233, 255);
   border-bottom: 2px solid #fff;
