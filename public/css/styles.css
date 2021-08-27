@@ -8,13 +8,7 @@
 
 body {
   background: rgb(165, 199, 255);
-  background: linear-gradient(
-    90deg,
-    rgba(165, 199, 255, 1) 0%,
-    rgba(205, 224, 255, 1) 20%,
-    rgba(202, 222, 255, 1) 80%,
-    rgba(141, 184, 255, 1) 100%
-  );
+  background: linear-gradient(90deg, rgba(165, 199, 255, 1) 0%, rgba(205, 224, 255, 1) 20%, rgba(202, 222, 255, 1) 80%, rgba(141, 184, 255, 1) 100%);
 }
 
 .container {
@@ -156,4 +150,24 @@ a:hover {
 
 .text-center {
   text-align: center;
+}
+
+.status-ball-error {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-top: 8px;
+  background: rgb(255, 43, 43);
+  background: radial-gradient(circle, rgba(255, 43, 43, 1) 40%, rgba(184, 0, 0, 1) 100%);
+  border-radius: 10px;
+}
+
+.status-ball-ok {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-top: 8px;
+  background: rgb(51, 195, 34);
+  background: radial-gradient(circle, rgba(51, 195, 34, 1) 40%, rgba(26, 128, 14, 1) 100%);
+  border-radius: 10px;
 }

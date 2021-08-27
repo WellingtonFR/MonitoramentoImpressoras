@@ -2,18 +2,14 @@
 
   <div class="sidebar">
     <FORM>
-      <input
-        type="button"
-        id="btn-atualizar"
-        onClick="location.reload()"
-        VALUE="Atualizar"
-      />
+      <input type="button" id="btn-atualizar" onClick="location.reload()" VALUE="Atualizar" />
     </FORM>
   </div>
 
   <div class="content">
     <table id="tabela-impressoras">
       <tr>
+        <th>Status</th>
         <th>Fila</th>
         <th>IP</th>
         <th>Marca</th>
@@ -26,48 +22,57 @@
       {{#each tabela}}
         <tr>
 
-          <td>{{this.Fila}}</td>
-          <td><a href="http://{{this.IP}}" target="blank">{{this.IP}}</a></td>
-          <td>{{this.Marca}}</td>
-          <td>{{this.Modelo}}</td>
+          {{#ifString this.Status "Online"}}
 
-          {{#if this.Toner 10}}
-            <td class="error-color">{{this.Toner}}</td>
-          {{else}}
-            <td>{{this.Toner}}</td>
-          {{/if}}
+            <td class="status-ball-ok"></td>
 
-          {{#if this.KitDeManutencao 10}}
-            <td class="error-color">{{this.KitDeManutencao}}</td>
-          {{else}}
-            <td>{{this.KitDeManutencao}}</td>
-          {{/if}}
+            <td>{{this.Fila}}</td>
+            <td><a href="http://{{this.IP}}" target="blank">{{this.IP}}</a></td>
+            <td>{{this.Marca}}</td>
+            <td>{{this.Modelo}}</td>
 
-          {{#if this.UnidadeDeImagem 10}}
-            <td class="error-color">{{this.UnidadeDeImagem}}</td>
-          {{else}}
-            <td>{{this.UnidadeDeImagem}}</td>
-          {{/if}}
-          <td>
-            <form method="GET" action="/detalhes">
-              <input type="hidden" name="ip" value="{{this.IP}}" />
-              <input type="hidden" name="fila" value="{{this.Fila}}" />
-              <input type="hidden" name="modelo" value="{{this.Modelo}}" />
-              <input type="hidden" name="toner" value="{{this.Toner}}" />
-              <input type="hidden" name="marca" value="{{this.Marca}}" />
-              <input
-                type="hidden"
-                name="kitDeManutencao"
-                value="{{this.KitDeManutencao}}"
-              />
-              <input
-                type="hidden"
-                name="unidadeDeImagem"
-                value="{{this.UnidadeDeImagem}}"
-              />
-              <input type="submit" class="btn-details" value="+" />
-            </form>
-          </td>
+            {{#if this.Toner 10}}
+              <td class="error-color">{{this.Toner}}</td>
+            {{else}}
+              <td>{{this.Toner}}</td>
+            {{/if}}
+
+            {{#if this.KitDeManutencao 10}}
+              <td class="error-color">{{this.KitDeManutencao}}</td>
+            {{else}}
+              <td>{{this.KitDeManutencao}}</td>
+            {{/if}}
+
+            {{#if this.UnidadeDeImagem 10}}
+              <td class="error-color">{{this.UnidadeDeImagem}}</td>
+            {{else}}
+              <td>{{this.UnidadeDeImagem}}</td>
+            {{/if}}
+            <td>
+              <form method="GET" action="/detalhes">
+                <input type="hidden" name="ip" value="{{this.IP}}" />
+                <input type="hidden" name="fila" value="{{this.Fila}}" />
+                <input type="hidden" name="modelo" value="{{this.Modelo}}" />
+                <input type="hidden" name="toner" value="{{this.Toner}}" />
+                <input type="hidden" name="marca" value="{{this.Marca}}" />
+                <input type="hidden" name="kitDeManutencao" value="{{this.KitDeManutencao}}" />
+                <input type="hidden" name="unidadeDeImagem" value="{{this.UnidadeDeImagem}}" />
+                <input type="submit" class="btn-details" value="+" />
+              </form>
+            </td>
+          {{/ifString}}
+
+          {{#ifString this.Status "Offline"}}
+            <td class="status-ball-error"></td>
+            <td>{{this.Fila}}</td>
+            <td>{{this.IP}}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          {{/ifString}}
 
         </tr>
       {{/each}}
