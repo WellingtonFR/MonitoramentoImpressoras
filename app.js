@@ -5,7 +5,6 @@ const path = require("path");
 const csv = require("csv-parser");
 const hbs = require("express-handlebars");
 const fs = require("fs");
-const { Console } = require("console");
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
 //express
@@ -53,12 +52,14 @@ async function recuperaInformacoes() {
     let urlHP = "http://" + dado.IP;
     let urlSamsung = "http://" + dado.IP + "/sws/app/information/home/home.json";
     let urlSamsung6555 = "http://" + dado.IP + "/Information/supplies_status.htm";
+    let urlSamsungM5360RX = "http://" + dado.IP + "/sws.application/home/homeDeviceInfo.sws";
     let responseSamsung = "";
     let responseSamsung6555 = "";
+    let responseSamsungM5360RX = "";
     let responseHP = "";
 
     try {
-      responseTest = await axios.get(testeConexao, { timeout: 4000 });
+      responseTest = await axios.get(testeConexao, { timeout: 6000 });
     } catch (error) {
       tabela.push({
         Fila: dado.Fila,
@@ -84,14 +85,15 @@ async function recuperaInformacoes() {
       responseSamsung6555 = await axios(urlSamsung6555);
     } catch (error) {}
 
+    try {
+      responseSamsungM5360RX = await axios(urlSamsungM5360RX);
+    } catch (error) {}
+
     function filtrar(indice1, indice2, dados) {
       let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
       let indice = filtro.search("remaining");
-      let valor = filtro.substring(indice + 10, indice + 13).trim();
-      if (valor == "0,") {
-        valor = "Não possui";
-      }
-      valor = valor.replace(",", "");
+      let valor = filtro.substring(indice + 10, indice + 14);
+      valor = limpar(valor);
       return valor;
     }
 
@@ -99,15 +101,43 @@ async function recuperaInformacoes() {
       let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
       let indice3 = filtro.search('"');
       let indice4 = filtro.search(",");
-      let valor = filtro.substring(indice3 + 1, indice4 - 1).trim();
+      let valor = filtro.substring(indice3 + 1, indice4 - 1);
+      valor = limpar(valor);
       return valor;
     }
 
     function filtrar6555(indice1, indice2, dados) {
       let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
       let indice = filtro.search("=");
-      let valor = filtro.substring(indice + 2, indice + 5).trim();
+      let valor = filtro.substring(indice + 2, indice + 5);
+
+      valor = limpar(valor);
+      return valor;
+    }
+
+    function filtrarM5360RX(indice1, indice2, dados) {
+      let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
+      let indice = filtro.search("remaining");
+      let valor = filtro.substring(indice + 10, indice + 15);
+      console.log(valor);
+
+      valor = limpar(valor);
+
+      let i = valor.search("'");
+      if (i == 2) {
+        valor = valor.substring(0, valor.length - 1);
+      }
+
+      console.log(valor);
+      return valor;
+    }
+
+    function limpar(valor) {
+      valor = valor.trim();
+      valor = valor.replace(",", "");
       valor = valor.replace(";", "");
+      valor = valor.replace("'", "");
+      valor = valor.replace('"', "");
       return valor;
     }
 
@@ -116,21 +146,25 @@ async function recuperaInformacoes() {
       let Toner = filtrar("toner_black", "toner_cyan", responseSamsung.data);
       let Modelo = filtrarModelo("model_name", "host_name", responseSamsung.data);
 
+      if (Modelo == "SL-M4020ND") {
+        UnidadeDeImagem = "-";
+      }
+
       if (Modelo) {
         tabela.push({
           Fila: dado.Fila,
           IP: dado.IP,
           Modelo: Modelo,
           Toner: Toner,
-          KitDeManutencao: "Não possui",
+          KitDeManutencao: "-",
           UnidadeDeImagem: UnidadeDeImagem,
           Marca: "Samsung",
           Status: "Online",
         });
       }
     } else if (responseSamsung6555.status == 200) {
-      let UnidadeDeImagem = filtrar6555("BlackTonerPer", "drumInstalled", responseSamsung6555.data);
-      let Toner = filtrar6555("BlackDrumPer", "ImageTranserBeltPer", responseSamsung6555.data);
+      let Toner = filtrar6555("BlackTonerPer", "drumInstalled", responseSamsung6555.data);
+      let UnidadeDeImagem = filtrar6555("BlackDrumPer", "ImageTranserBeltPer", responseSamsung6555.data);
       let Modelo = "SCX-6x55X Series";
 
       if (Modelo) {
@@ -139,7 +173,24 @@ async function recuperaInformacoes() {
           IP: dado.IP,
           Modelo: Modelo,
           Toner: Toner,
-          KitDeManutencao: "Não possui",
+          KitDeManutencao: "-",
+          UnidadeDeImagem: UnidadeDeImagem,
+          Marca: "Samsung",
+          Status: "Online",
+        });
+      }
+    } else if (responseSamsungM5360RX.status == 200) {
+      let Toner = filtrarM5360RX("tonerData", "loadTonerData", responseSamsungM5360RX.data);
+      let UnidadeDeImagem = filtrarM5360RX("imagineData", "loadImagineData", responseSamsungM5360RX.data);
+      let Modelo = "Samsung M5360RX";
+
+      if (Modelo) {
+        tabela.push({
+          Fila: dado.Fila,
+          IP: dado.IP,
+          Modelo: Modelo,
+          Toner: Toner,
+          KitDeManutencao: "-",
           UnidadeDeImagem: UnidadeDeImagem,
           Marca: "Samsung",
           Status: "Online",
@@ -155,7 +206,7 @@ async function recuperaInformacoes() {
       let Modelo = $("#HomeDeviceName").text();
 
       if (KitDeManutencao == "") {
-        KitDeManutencao = "Não possui";
+        KitDeManutencao = "-";
       }
 
       if (Toner == "<10") {
@@ -169,7 +220,7 @@ async function recuperaInformacoes() {
           Modelo: Modelo,
           Toner: Toner,
           KitDeManutencao: KitDeManutencao,
-          UnidadeDeImagem: "Não possui",
+          UnidadeDeImagem: "-",
           Marca: "HP",
           Status: "Online",
         });
@@ -178,7 +229,7 @@ async function recuperaInformacoes() {
   });
 }
 
-async function recuperaDetalhes(ip, fila, modelo, toner, kitDeManutencao, marca) {
+async function recuperaDetalhes(ip, fila, modelo, toner, marca, kitDeManutencao, unidadeDeImagem) {
   tabelaDetalhes = []; //Limpa dados anteriores
 
   if (marca == "HP") {
@@ -199,7 +250,7 @@ async function recuperaDetalhes(ip, fila, modelo, toner, kitDeManutencao, marca)
         TotalDeImpressoes = TotalDeImpressoes.replace(",", ".");
 
         if (kitDeManutencao == "") {
-          kitDeManutencao = "Não possui";
+          kitDeManutencao = "-";
         }
 
         if (Serial || TotalDeImpressoes) {
@@ -210,7 +261,7 @@ async function recuperaDetalhes(ip, fila, modelo, toner, kitDeManutencao, marca)
             Serial: Serial,
             Toner: toner,
             KitDeManutencao: kitDeManutencao,
-            UnidadeDeImagem: "Não possui",
+            UnidadeDeImagem: "-",
             TotalDeImpressoes: TotalDeImpressoes,
           });
         }
@@ -235,27 +286,28 @@ async function recuperaDetalhes(ip, fila, modelo, toner, kitDeManutencao, marca)
 
     let urlSamsung = "http://" + ip + "/sws/app/information/counters/counters.json";
 
-    await axios(urlSamsung).then((response) => {
-      let Serial = filtrarSerial("GXI_SYS_SERIAL_NUM", response.data);
-      let TotalDeImpressoes = filtrarTotalDeImpressoes("GXI_BILLING_TOTAL_IMP_CNT", "GXI_LARGE_BILLING_CNT_SUPPORT", response.data);
+    await axios(urlSamsung)
+      .then((response) => {
+        let Serial = filtrarSerial("GXI_SYS_SERIAL_NUM", response.data);
+        let TotalDeImpressoes = filtrarTotalDeImpressoes("GXI_BILLING_TOTAL_IMP_CNT", "GXI_LARGE_BILLING_CNT_SUPPORT", response.data);
 
-      Serial = Serial.replace(",", "");
-      Serial = Serial.replace('"', "");
+        Serial = Serial.replace(",", "");
+        Serial = Serial.replace('"', "");
 
-      if (Serial || TotalDeImpressoes) {
-        tabelaDetalhes.push({
-          Fila: fila,
-          IP: ip,
-          Modelo: modelo,
-          Serial: Serial,
-          Toner: toner,
-          KitDeManutencao: kitDeManutencao,
-          UnidadeDeImagem: "Não possui",
-          TotalDeImpressoes: TotalDeImpressoes,
-        });
-      }
-    });
-    //.catch((err) => {});
+        if (Serial || TotalDeImpressoes) {
+          tabelaDetalhes.push({
+            Fila: fila,
+            IP: ip,
+            Modelo: modelo,
+            Serial: Serial,
+            Toner: toner,
+            KitDeManutencao: "-",
+            UnidadeDeImagem: unidadeDeImagem,
+            TotalDeImpressoes: TotalDeImpressoes,
+          });
+        }
+      })
+      .catch((err) => {});
   }
 }
 
@@ -272,8 +324,7 @@ app.get("/info", (req, res) => {
 });
 
 app.get("/detalhes", async (req, res) => {
-  await recuperaDetalhes(req.query.ip, req.query.fila, req.query.modelo, req.query.toner, req.query.kitDeManutencao, req.query.marca);
-
+  await recuperaDetalhes(req.query.ip, req.query.fila, req.query.modelo, req.query.toner, req.query.marca, req.query.kitDeManutencao, req.query.unidadeDeImagem);
   res.render("detalhes", { tabelaDetalhes: tabelaDetalhes });
 });
 

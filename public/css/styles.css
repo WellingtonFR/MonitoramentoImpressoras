@@ -4,11 +4,12 @@
   box-sizing: border-box;
   border: none;
   font-family: "Roboto", sans-serif;
+  color: rgb(236, 236, 236);
+  font-size: 14px;
 }
 
 body {
-  background: rgb(165, 199, 255);
-  background: linear-gradient(90deg, rgba(165, 199, 255, 1) 0%, rgba(205, 224, 255, 1) 20%, rgba(202, 222, 255, 1) 80%, rgba(141, 184, 255, 1) 100%);
+  background: rgb(107, 107, 107);
 }
 
 .container {
@@ -31,11 +32,19 @@ body {
 
 a {
   text-decoration: none;
-  color: rgb(0, 0, 0);
 }
 
 a:hover {
-  color: rgb(0, 62, 179);
+  color: rgb(182, 182, 182);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+  padding-left: 10px;
 }
 
 .error-color {
@@ -46,30 +55,88 @@ a:hover {
 #tabela-impressoras {
   width: 100%;
   text-align: center;
-  background-color: rgb(0, 72, 180);
   border-collapse: collapse;
+  font-size: 12px;
 }
 
 #tabela-impressoras td {
-  padding: 3px;
   border: none;
 }
 
 #tabela-impressoras th {
   padding: 3px;
-  background-color: rgb(112, 169, 255);
+  background-color: rgb(15, 15, 15);
   border: none;
+  cursor: n-resize;
 }
 
 #tabela-impressoras tr {
-  background-color: rgb(174, 206, 255);
-  border-bottom: 2px solid #fff;
+  background-color: rgb(26, 26, 26);
+  color: white;
+  line-height: 20px;
+  border-bottom: 1px solid rgb(0, 0, 0);
 }
 
 #tabela-impressoras tr:hover {
   transition: 0.4s;
-  background-color: rgb(219, 233, 255);
-  border-bottom: 2px solid #fff;
+  background-color: rgb(88, 88, 88);
+  border-bottom: 1px solid rgb(179, 179, 179);
+}
+
+.status-ball-error {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  background: rgb(255, 43, 43);
+  border-radius: 10px;
+}
+
+.status-ball-ok {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  background: rgb(51, 195, 34);
+  border-radius: 10px;
+}
+
+#btn-atualizar {
+  width: 150px;
+  height: 50px;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 5px;
+  background-color: rgb(43, 43, 43);
+  border-radius: 10px;
+}
+
+#btn-atualizar:hover {
+  transition: 0.5s;
+  width: 151px;
+  height: 50px;
+  background-color: rgb(31, 31, 31);
+  box-shadow: 0px 0px 3px 2px rgba(0, 0, 0, 0.28);
+}
+
+.btn-details {
+  display: block;
+  margin: 0px auto;
+  font-weight: bold;
+  width: 15px;
+  height: 15px;
+  line-height: 15px;
+  text-decoration: none;
+  color: rgb(0, 0, 0);
+  background-color: rgb(212, 212, 212);
+  border-radius: 20px;
+}
+
+.btn-details:hover {
+  transition: 0.5s;
+  z-index: 999;
+  background-color: rgb(230, 230, 230);
+  box-shadow: 0px 0px 3px 2px rgba(0, 0, 0, 0.28);
 }
 
 /* detalhes */
@@ -77,7 +144,7 @@ a:hover {
 #tabela-detalhes {
   width: 60%;
   text-align: left;
-  background-color: rgb(0, 72, 180);
+  background-color: rgb(26, 26, 26);
   border-collapse: collapse;
 }
 
@@ -91,83 +158,17 @@ a:hover {
   padding: 3px;
   padding-left: 10px;
   width: 30%;
-  background-color: rgb(112, 169, 255);
+  background-color: rgb(26, 26, 26);
   border: none;
 }
 
 #tabela-detalhes tr {
-  background-color: rgb(174, 206, 255);
-  border-bottom: 2px solid #fff;
+  background-color: rgb(58, 58, 58);
+  border-bottom: 1px solid rgb(0, 0, 0);
 }
 
 #tabela-detalhes tr:hover {
   transition: 0.4s;
   background-color: rgb(219, 233, 255);
   border-bottom: 2px solid #fff;
-}
-
-#btn-atualizar {
-  width: 150px;
-  height: 50px;
-  font-size: 16px;
-  font-weight: bold;
-  padding: 5px;
-  background-color: rgb(97, 158, 255);
-  border-radius: 10px;
-  color: #fff;
-}
-
-#btn-atualizar:hover {
-  transition: 0.5s;
-  width: 151px;
-  height: 50px;
-  background-color: rgb(104, 182, 255);
-  box-shadow: 0px 0px 3px 2px rgba(0, 0, 0, 0.28);
-}
-
-.btn-details {
-  display: block;
-  margin: 0px auto;
-  font-weight: bold;
-  width: 25px;
-  height: 25px;
-  line-height: 25px;
-  text-decoration: none;
-  color: #fff;
-  background-color: rgb(55, 135, 255);
-  border-radius: 20px;
-}
-
-.btn-details:hover {
-  transition: 0.5s;
-  z-index: 999;
-  width: 26px;
-  height: 26px;
-  line-height: 28px;
-  background-color: rgb(59, 193, 255);
-  box-shadow: 0px 0px 3px 2px rgba(0, 0, 0, 0.28);
-}
-
-.text-center {
-  text-align: center;
-}
-
-.status-ball-error {
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  margin-top: 8px;
-  background: rgb(255, 43, 43);
-  background: radial-gradient(circle, rgba(255, 43, 43, 1) 40%, rgba(184, 0, 0, 1) 100%);
-  border-radius: 10px;
-}
-
-.status-ball-ok {
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  margin-top: 8px;
-  background: rgb(51, 195, 34);
-  background: radial-gradient(circle, rgba(51, 195, 34, 1) 40%, rgba(26, 128, 14, 1) 100%);
-  border-radius: 10px;
 }

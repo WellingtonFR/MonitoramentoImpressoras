@@ -10,13 +10,13 @@
     <table id="tabela-impressoras">
       <tr>
         <th>Status</th>
-        <th>Fila</th>
-        <th>IP</th>
-        <th>Marca</th>
-        <th>Modelo</th>
-        <th>Toner (%)</th>
-        <th>Kit de manuteção (%)</th>
-        <th>Unidade de imagem (%)</th>
+        <th onclick="sortTable(1)">Fila</th>
+        <th onclick="sortTable(2)">IP</th>
+        <th onclick="sortTable(3)">Marca</th>
+        <th onclick="sortTable(4)">Modelo</th>
+        <th onclick="sortTable(5)">Toner (%)</th>
+        <th onclick="sortTable(6)">Kit de manuteção (%)</th>
+        <th onclick="sortTable(7)">Unidade de imagem (%)</th>
         <th>Detalhes</th>
       </tr>
       {{#each tabela}}
@@ -26,10 +26,10 @@
 
             <td class="status-ball-ok"></td>
 
-            <td>{{this.Fila}}</td>
+            <td class="text-left">{{this.Fila}}</td>
             <td><a href="http://{{this.IP}}" target="blank">{{this.IP}}</a></td>
             <td>{{this.Marca}}</td>
-            <td>{{this.Modelo}}</td>
+            <td class="text-left">{{this.Modelo}}</td>
 
             {{#if this.Toner 10}}
               <td class="error-color">{{this.Toner}}</td>
@@ -64,7 +64,7 @@
 
           {{#ifString this.Status "Offline"}}
             <td class="status-ball-error"></td>
-            <td>{{this.Fila}}</td>
+            <td class="text-left">{{this.Fila}}</td>
             <td>{{this.IP}}</td>
             <td></td>
             <td></td>

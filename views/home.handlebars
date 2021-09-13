@@ -2,33 +2,24 @@
 
   <div class="sidebar">
     <form>
-      <input
-        type="button"
-        id="btn-atualizar"
-        onClick="trocarTexto()"
-        value="Obter dados"
-      />
+      <input type="button" id="btn-atualizar" onClick="trocarTexto()" value="Obter dados" />
     </form>
   </div>
 
   <div class="content">
     <table id="tabela-impressoras">
       <tr>
+        <th>Status</th>
         <th>Fila</th>
         <th>IP</th>
+        <th>Marca</th>
         <th>Modelo</th>
         <th>Toner (%)</th>
         <th>Kit de manuteção (%)</th>
-        <th>Unidade de imagem</th>
+        <th>Unidade de imagem (%)</th>
         <th>Detalhes</th>
       </tr>
     </table>
   </div>
 
 </div>
-
-<script>
-  function trocarTexto() { el = document.getElementById("btn-atualizar")
-  el.value = "Carregando ..."; setTimeout(function() { location.href='/info' },
-  7000); }
-</script>
