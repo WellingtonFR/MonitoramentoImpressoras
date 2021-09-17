@@ -169,6 +169,6 @@ a:hover {
 
 #tabela-detalhes tr:hover {
   transition: 0.4s;
-  background-color: rgb(219, 233, 255);
-  border-bottom: 2px solid #fff;
+  background-color: rgb(88, 88, 88);
+  border-bottom: 1px solid rgb(179, 179, 179);
 }

@@ -38,232 +38,230 @@ app.set("view engine", "handlebars");
 let dados = [];
 let tabela = [];
 let tabelaDetalhes = [];
-let Status = "";
 
 fs.createReadStream("Impressoras.csv")
   .pipe(csv())
   .on("data", (data) => dados.push(data));
 
+function limpar(valor) {
+  valor = valor.trim();
+  valor = valor.replace(",", "");
+  valor = valor.replace(";", "");
+  valor = valor.replace("'", "");
+  valor = valor.replace('"', "");
+  valor = valor.replace("<", "");
+  valor = valor.replace(">", "");
+  valor = valor.replace("%", "");
+  valor = valor.replace("*", "");
+  return valor;
+}
+
+function pushTabela(fila, ip, modelo, toner, kitDeManutencao, unidadeDeImagem, marca, status) {
+  tabela.push({
+    Fila: fila,
+    IP: ip,
+    Modelo: modelo,
+    Toner: toner,
+    KitDeManutencao: kitDeManutencao,
+    UnidadeDeImagem: unidadeDeImagem,
+    Marca: marca,
+    Status: status,
+  });
+}
+
+function pushTabelaDetalhes(fila, ip, modelo, serial, toner, kitDeManutencao, unidadeDeImagem, totalDeImpressoes) {
+  tabelaDetalhes.push({
+    Fila: fila,
+    IP: ip,
+    Modelo: modelo,
+    Serial: serial,
+    Toner: toner,
+    KitDeManutencao: kitDeManutencao,
+    UnidadeDeImagem: unidadeDeImagem,
+    TotalDeImpressoes: totalDeImpressoes,
+  });
+}
+
 async function recuperaInformacoes() {
   tabela = []; //Limpa dados anteriores
 
-  await dados.forEach(async (dado) => {
-    let testeConexao = "http://" + dado.IP;
-    let urlHP = "http://" + dado.IP;
-    let urlSamsung = "http://" + dado.IP + "/sws/app/information/home/home.json";
-    let urlSamsung6555 = "http://" + dado.IP + "/Information/supplies_status.htm";
-    let urlSamsungM5360RX = "http://" + dado.IP + "/sws.application/home/homeDeviceInfo.sws";
+  //Verifica se existe mas não consegue pegar os dados
+
+  function filtrar(indice1, indice2, dados) {
+    let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
+    let indice = filtro.search("remaining");
+    let valor = filtro.substring(indice + 10, indice + 14);
+    valor = limpar(valor);
+    return valor;
+  }
+
+  function filtrarModelo(indice1, indice2, dados) {
+    let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
+    let indice3 = filtro.search('"');
+    let indice4 = filtro.search(",");
+    let valor = filtro.substring(indice3 + 1, indice4 - 1);
+    valor = limpar(valor);
+    return valor;
+  }
+
+  function filtrar6555(indice1, indice2, dados) {
+    let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
+    let indice = filtro.search("=");
+    let valor = filtro.substring(indice + 2, indice + 5);
+
+    valor = limpar(valor);
+    return valor;
+  }
+
+  function filtrarM5360RX(indice1, indice2, dados) {
+    let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
+    let indice = filtro.search("remaining");
+    let valor = filtro.substring(indice + 10, indice + 15);
+
+    valor = limpar(valor);
+
+    let i = valor.search("'");
+    if (i == 2) {
+      valor = valor.substring(0, valor.length - 1);
+    }
+
+    return valor;
+  }
+
+  dados.forEach(async (dado) => {
+    //Para verificação se existe mas não tem dados a exibir
+    let Toner = "";
+
+    //string de conexão
+    let url = "http://" + dado.IP;
+    let testeConexao = url;
+    let urlHP = url + "/hp/device/DeviceStatus/Index";
+    let urlSamsung = url + "/sws/app/information/home/home.json";
+    let urlSamsung6555 = url + "/Information/supplies_status.htm";
+    let urlSamsungM5360RX = url + "/sws.application/home/homeDeviceInfo.sws";
+
+    //Limpa resposta para a próxima requisição
+    let responseTeste = "";
     let responseSamsung = "";
     let responseSamsung6555 = "";
     let responseSamsungM5360RX = "";
     let responseHP = "";
 
-    try {
-      responseTest = await axios.get(testeConexao, { timeout: 6000 });
-    } catch (error) {
-      tabela.push({
-        Fila: dado.Fila,
-        IP: dado.IP,
-        Modelo: "",
-        Toner: "",
-        KitDeManutencao: "",
-        UnidadeDeImagem: "",
-        Marca: "",
-        Status: "Offline",
+    //Verifica se está offline
+    responseTeste = axios(testeConexao, { timeout: 7000 })
+      .then((data) => {})
+      .catch((error) => {
+        pushTabela(dado.Fila, dado.IP, "", "", "", "", "", "Offline");
       });
+
+    //Maioria dos modelos Samsung
+    responseSamsung = await axios(urlSamsung)
+      .then((response) => {
+        let UnidadeDeImagem = filtrar("drum_black", "drum_cyan", response.data);
+        Toner = filtrar("toner_black", "toner_cyan", response.data);
+        let Modelo = filtrarModelo("model_name", "host_name", response.data);
+
+        if (Modelo == "SL-M4020ND" || Modelo == "Samsung CLX-6260 Series") {
+          UnidadeDeImagem = "-";
+        }
+
+        if (Modelo) {
+          pushTabela(dado.Fila, dado.IP, Modelo, Toner, "-", UnidadeDeImagem, "Samsung", "Online");
+        }
+      })
+      .catch((error) => {});
+
+    //Todas as HPs
+    responseHP = await axios(urlHP)
+      .then((response) => {
+        let $ = cheerio.load(response.data);
+        Toner = $("#SupplyPLR0").text();
+        let KitDeManutencao = $("#SupplyPLR1").text();
+        let Modelo = $("#HomeDeviceName").text();
+
+        if (Toner) {
+          Toner = limpar(Toner);
+        }
+
+        if (KitDeManutencao) {
+          KitDeManutencao = limpar(KitDeManutencao);
+        }
+
+        if (KitDeManutencao == "") {
+          KitDeManutencao = "-";
+        }
+
+        if (Modelo) {
+          pushTabela(dado.Fila, dado.IP, Modelo, Toner, KitDeManutencao, "-", "HP", "Online");
+        }
+      })
+      .catch((error) => {});
+
+    //Samsung 6555 (Multifuncional)
+    responseSamsung6555 = await axios(urlSamsung6555)
+      .then((response) => {
+        Toner = filtrar6555("BlackTonerPer", "drumInstalled", response.data);
+        let UnidadeDeImagem = filtrar6555("BlackDrumPer", "ImageTranserBeltPer", response.data);
+        let Modelo = "SCX-6x55X Series";
+
+        if (Toner || UnidadeDeImagem) {
+          pushTabela(dado.Fila, dado.IP, Modelo, Toner, "-", UnidadeDeImagem, "Samsung", "Online");
+        }
+      })
+      .catch((error) => {});
+
+    //Samsung M5360RX
+    responseSamsungM5360RX = await axios(urlSamsungM5360RX)
+      .then((response) => {
+        if (response.data == "") {
+          //Retorna vazio - usado para não sobrepor a 6555
+          throw Error;
+        }
+        Toner = filtrarM5360RX("tonerData", "loadTonerData", response.data);
+        let UnidadeDeImagem = filtrarM5360RX("imagineData", "loadImagineData", response.data);
+        let Modelo = "Samsung M5360RX";
+
+        if (Toner || UnidadeDeImagem) {
+          pushTabela(dado.Fila, dado.IP, Modelo, Toner, "-", UnidadeDeImagem, "Samsung", "Online");
+        }
+      })
+      .catch((error) => {});
+
+    if (Toner === "") {
+      pushTabela(dado.Fila, dado.IP, "-", "-", "-", "-", "-", "Online");
     }
-
-    try {
-      responseHP = await axios(urlHP);
-    } catch (error) {}
-
-    try {
-      responseSamsung = await axios(urlSamsung);
-    } catch (error) {}
-
-    try {
-      responseSamsung6555 = await axios(urlSamsung6555);
-    } catch (error) {}
-
-    try {
-      responseSamsungM5360RX = await axios(urlSamsungM5360RX);
-    } catch (error) {}
-
-    function filtrar(indice1, indice2, dados) {
-      let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
-      let indice = filtro.search("remaining");
-      let valor = filtro.substring(indice + 10, indice + 14);
-      valor = limpar(valor);
-      return valor;
-    }
-
-    function filtrarModelo(indice1, indice2, dados) {
-      let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
-      let indice3 = filtro.search('"');
-      let indice4 = filtro.search(",");
-      let valor = filtro.substring(indice3 + 1, indice4 - 1);
-      valor = limpar(valor);
-      return valor;
-    }
-
-    function filtrar6555(indice1, indice2, dados) {
-      let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
-      let indice = filtro.search("=");
-      let valor = filtro.substring(indice + 2, indice + 5);
-
-      valor = limpar(valor);
-      return valor;
-    }
-
-    function filtrarM5360RX(indice1, indice2, dados) {
-      let filtro = dados.substring(dados.search(indice1), dados.search(indice2));
-      let indice = filtro.search("remaining");
-      let valor = filtro.substring(indice + 10, indice + 15);
-      console.log(valor);
-
-      valor = limpar(valor);
-
-      let i = valor.search("'");
-      if (i == 2) {
-        valor = valor.substring(0, valor.length - 1);
-      }
-
-      console.log(valor);
-      return valor;
-    }
-
-    function limpar(valor) {
-      valor = valor.trim();
-      valor = valor.replace(",", "");
-      valor = valor.replace(";", "");
-      valor = valor.replace("'", "");
-      valor = valor.replace('"', "");
-      return valor;
-    }
-
-    if (responseSamsung.status == 200) {
-      let UnidadeDeImagem = filtrar("drum_black", "drum_cyan", responseSamsung.data);
-      let Toner = filtrar("toner_black", "toner_cyan", responseSamsung.data);
-      let Modelo = filtrarModelo("model_name", "host_name", responseSamsung.data);
-
-      if (Modelo == "SL-M4020ND") {
-        UnidadeDeImagem = "-";
-      }
-
-      if (Modelo) {
-        tabela.push({
-          Fila: dado.Fila,
-          IP: dado.IP,
-          Modelo: Modelo,
-          Toner: Toner,
-          KitDeManutencao: "-",
-          UnidadeDeImagem: UnidadeDeImagem,
-          Marca: "Samsung",
-          Status: "Online",
-        });
-      }
-    } else if (responseSamsung6555.status == 200) {
-      let Toner = filtrar6555("BlackTonerPer", "drumInstalled", responseSamsung6555.data);
-      let UnidadeDeImagem = filtrar6555("BlackDrumPer", "ImageTranserBeltPer", responseSamsung6555.data);
-      let Modelo = "SCX-6x55X Series";
-
-      if (Modelo) {
-        tabela.push({
-          Fila: dado.Fila,
-          IP: dado.IP,
-          Modelo: Modelo,
-          Toner: Toner,
-          KitDeManutencao: "-",
-          UnidadeDeImagem: UnidadeDeImagem,
-          Marca: "Samsung",
-          Status: "Online",
-        });
-      }
-    } else if (responseSamsungM5360RX.status == 200) {
-      let Toner = filtrarM5360RX("tonerData", "loadTonerData", responseSamsungM5360RX.data);
-      let UnidadeDeImagem = filtrarM5360RX("imagineData", "loadImagineData", responseSamsungM5360RX.data);
-      let Modelo = "Samsung M5360RX";
-
-      if (Modelo) {
-        tabela.push({
-          Fila: dado.Fila,
-          IP: dado.IP,
-          Modelo: Modelo,
-          Toner: Toner,
-          KitDeManutencao: "-",
-          UnidadeDeImagem: UnidadeDeImagem,
-          Marca: "Samsung",
-          Status: "Online",
-        });
-      }
-    } else if (responseHP.status == 200) {
-      let html = responseHP.data;
-      let $ = cheerio.load(html);
-      let TonerBruto = $("#SupplyPLR0").text();
-      let Toner = TonerBruto.substring(0, TonerBruto.length - 2);
-      let KitDeManutencaoBruto = $("#SupplyPLR1").text();
-      let KitDeManutencao = KitDeManutencaoBruto.substring(0, KitDeManutencaoBruto.length - 2);
-      let Modelo = $("#HomeDeviceName").text();
-
-      if (KitDeManutencao == "") {
-        KitDeManutencao = "-";
-      }
-
-      if (Toner == "<10") {
-        Toner = Toner.substring(1, Toner.length);
-      }
-
-      if (Modelo) {
-        tabela.push({
-          Fila: dado.Fila,
-          IP: dado.IP,
-          Modelo: Modelo,
-          Toner: Toner,
-          KitDeManutencao: KitDeManutencao,
-          UnidadeDeImagem: "-",
-          Marca: "HP",
-          Status: "Online",
-        });
-      }
-    }
-  });
+  }); //dados.foreach
 }
 
 async function recuperaDetalhes(ip, fila, modelo, toner, marca, kitDeManutencao, unidadeDeImagem) {
   tabelaDetalhes = []; //Limpa dados anteriores
+  let Serial = "";
+  let TotalDeImpressoes = "";
 
+  //HP
   if (marca == "HP") {
-    //HP
     let urlHP = "http://" + ip + "/hp/device/InternalPages/Index?id=UsagePage";
     await axios(urlHP)
       .then((response) => {
-        let html = response.data;
-        let $ = cheerio.load(html);
-        let Serial = $("#UsagePage\\.DeviceInformation\\.DeviceSerialNumber").text();
-        let TotalDeImpressoes = $("#UsagePage\\.EquivalentImpressionsTable\\.Total\\.Total").text();
+        let $ = cheerio.load(response.data);
+        Serial = $("#UsagePage\\.DeviceInformation\\.DeviceSerialNumber").text();
+        TotalDeImpressoes = $("#UsagePage\\.EquivalentImpressionsTable\\.Total\\.Total").text();
 
         if (modelo == "HP LaserJet E50145") {
           TotalDeImpressoes = $("#UsagePage\\.EquivalentImpressionsTable\\.Print\\.Total").text();
         }
 
-        TotalDeImpressoes = TotalDeImpressoes.substring(0, TotalDeImpressoes.length - 2);
-        TotalDeImpressoes = TotalDeImpressoes.replace(",", ".");
+        if (TotalDeImpressoes) {
+          TotalDeImpressoes = TotalDeImpressoes.substring(0, TotalDeImpressoes.length - 2);
+          TotalDeImpressoes = TotalDeImpressoes.replace(",", ".");
+        }
 
         if (kitDeManutencao == "") {
           kitDeManutencao = "-";
         }
 
         if (Serial || TotalDeImpressoes) {
-          tabelaDetalhes.push({
-            Fila: fila,
-            IP: ip,
-            Modelo: modelo,
-            Serial: Serial,
-            Toner: toner,
-            KitDeManutencao: kitDeManutencao,
-            UnidadeDeImagem: "-",
-            TotalDeImpressoes: TotalDeImpressoes,
-          });
+          pushTabelaDetalhes(fila, ip, modelo, Serial, toner, kitDeManutencao, "-", TotalDeImpressoes);
         }
       })
       .catch((err) => {});
@@ -285,37 +283,51 @@ async function recuperaDetalhes(ip, fila, modelo, toner, marca, kitDeManutencao,
     }
 
     let urlSamsung = "http://" + ip + "/sws/app/information/counters/counters.json";
+    // let urlSamsung6555 = "http://" + ip + "/Information/billing_counters.htm";
 
-    await axios(urlSamsung)
+    //Limpa dados anteriores
+    let responseSamsung = "";
+    // let responseSamsung6555 = "";
+
+    responseSamsung = await axios(urlSamsung)
       .then((response) => {
-        let Serial = filtrarSerial("GXI_SYS_SERIAL_NUM", response.data);
-        let TotalDeImpressoes = filtrarTotalDeImpressoes("GXI_BILLING_TOTAL_IMP_CNT", "GXI_LARGE_BILLING_CNT_SUPPORT", response.data);
+        Serial = filtrarSerial("GXI_SYS_SERIAL_NUM", response.data);
+        TotalDeImpressoes = filtrarTotalDeImpressoes("GXI_BILLING_TOTAL_IMP_CNT", "GXI_LARGE_BILLING_CNT_SUPPORT", response.data);
 
-        Serial = Serial.replace(",", "");
-        Serial = Serial.replace('"', "");
+        if (Serial) {
+          Serial = limpar(Serial);
+        }
 
         if (Serial || TotalDeImpressoes) {
-          tabelaDetalhes.push({
-            Fila: fila,
-            IP: ip,
-            Modelo: modelo,
-            Serial: Serial,
-            Toner: toner,
-            KitDeManutencao: "-",
-            UnidadeDeImagem: unidadeDeImagem,
-            TotalDeImpressoes: TotalDeImpressoes,
-          });
+          pushTabelaDetalhes(fila, ip, modelo, Serial, toner, "-", unidadeDeImagem, TotalDeImpressoes);
         }
       })
-      .catch((err) => {});
+      .catch((error) => {});
+
+    // responseSamsung6555 = await axios(urlSamsung6555)
+    //   .then((response) => {
+    //     let $ = cheerio.load(response.data);
+    //     let Serial = $(".allNormalTable", $(".valueFont")).text();
+    //     let TotalDeImpressoes = "";
+
+    //     if (Serial || TotalDeImpressoes) {
+    //       pushTabelaDetalhes(fila, ip, modelo, Serial, toner, "-", unidadeDeImagem, TotalDeImpressoes);
+    //     }
+    //   })
+    //   .catch((error) => {});
+  }
+
+  //Se não encontrar serial ou total de impressões sobe somente as informações que possui
+  if (Serial === "" || TotalDeImpressoes === "") {
+    pushTabelaDetalhes(fila, ip, modelo, "-", toner, kitDeManutencao, unidadeDeImagem, "-");
   }
 }
 
+//Rotas
+
 app.get("/", async (req, res) => {
+  console.log("Buscando dados ...");
   await recuperaInformacoes();
-  tabela.sort(function (a, b) {
-    return a.Status != "Online" ? -1 : 0;
-  });
   res.render("home");
 });
 
